@@ -83,3 +83,26 @@ export async function storePost(post: Post) {
   await new Promise((resolve) => setTimeout(resolve, 1000));
   return stmt.run(post.imageUrl, post.title, post.content, post.userId);
 }
+
+export async function updatePostLikeStatus(postId: number, userId: number) {
+  const stmt = db.prepare<[number, number], { count: number }>(`
+    SELECT COUNT(*) AS count
+    FROM likes
+    WHERE user_id = ? AND post_id = ?`);
+
+  const isLiked = (stmt.get(userId, postId)?.count ?? 0) === 0;
+
+  if (isLiked) {
+    const stmt = db.prepare(`
+      INSERT INTO likes (user_id, post_id)
+      VALUES (?, ?)`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return stmt.run(userId, postId);
+  } else {
+    const stmt = db.prepare(`
+      DELETE FROM likes
+      WHERE user_id = ? AND post_id = ?`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return stmt.run(userId, postId);
+  }
+}

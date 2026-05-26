@@ -1,6 +1,6 @@
-"server actions";
+"use server";
 
-import { storePost } from "@/lib/posts";
+import { storePost, updatePostLikeStatus } from "@/lib/posts";
 import { redirect } from "next/navigation";
 
 type FormState = {
@@ -11,8 +11,6 @@ export async function createPost(
   prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  "use server";
-
   const title = formData.get("title") as string;
   const image = formData.get("image") as File;
   const content = formData.get("content") as string;
@@ -43,4 +41,8 @@ export async function createPost(
   });
 
   redirect("/feed");
+}
+
+export async function toggleLikePostStatus(postId: number) {
+  updatePostLikeStatus(postId, 2);
 }
