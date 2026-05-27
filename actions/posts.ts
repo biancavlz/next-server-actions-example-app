@@ -1,6 +1,7 @@
 "use server";
 
 import { storePost, updatePostLikeStatus } from "@/lib/posts";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 type FormState = {
@@ -44,5 +45,7 @@ export async function createPost(
 }
 
 export async function toggleLikePostStatus(postId: number) {
-  updatePostLikeStatus(postId, 2);
+  await updatePostLikeStatus(postId, 2);
+
+  revalidatePath("/feed");
 }
