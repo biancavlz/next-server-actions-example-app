@@ -1,6 +1,9 @@
+"use client";
+
 import { formatDate } from "@/lib/format";
 import LikeButton from "./like-button";
 import { toggleLikePostStatus } from "@/actions/posts";
+import { useOptimistic } from "react";
 
 type Post = {
   id: number;
@@ -11,14 +14,15 @@ type Post = {
   userFirstName: string;
   userLastName: string;
   likes: number;
-  isLiked: boolean; // better as boolean
+  isLiked: boolean;
 };
 
 type PostProps = {
   post: Post;
+  action: (postId: number) => Promise<void>;
 };
 
-function Post({ post }: PostProps) {
+function Post({ post, action }: PostProps) {
   //Image will be stored in cloudinary
   return (
     <article className="post">
@@ -38,7 +42,7 @@ function Post({ post }: PostProps) {
           </div>
           <div>
             <form
-              action={toggleLikePostStatus.bind(null, post.id)}
+              action={action.bind(null, post.id)}
               className={post.isLiked ? "liked" : ""}
             >
               <LikeButton />
@@ -56,15 +60,39 @@ type PostsProps = {
 };
 
 export default function Posts({ posts }: PostsProps) {
-  if (!posts || posts.length === 0) {
+  const [optimisticPosts, updateOptimisticPosts] = useOptimistic(
+    posts,
+    (prevPosts, updatedPostId) => {
+      const updatedPostIndex = prevPosts.findIndex(
+        (post) => post.id === updatedPostId,
+      );
+
+      if (updatedPostIndex === -1) {
+        return prevPosts;
+      }
+      const updatedPost = { ...prevPosts[updatedPostIndex] };
+      updatedPost.likes = updatedPost.likes + (updatedPost.likes ? -1 : 1);
+      updatedPost.isLiked = !updatedPost.isLiked;
+      const newPosts = [...prevPosts];
+      newPosts[updatedPostIndex] = updatedPost;
+      return newPosts;
+    },
+  );
+
+  if (!optimisticPosts || optimisticPosts.length === 0) {
     return <p>There are no posts yet. Maybe start sharing some?</p>;
+  }
+
+  async function updatePost(postId: number) {
+    updateOptimisticPosts(postId);
+    await toggleLikePostStatus(postId);
   }
 
   return (
     <ul className="posts">
-      {posts.map((post) => (
+      {optimisticPosts.map((post) => (
         <li key={post.id}>
-          <Post post={post} />
+          <Post post={post} action={updatePost} />
         </li>
       ))}
     </ul>
