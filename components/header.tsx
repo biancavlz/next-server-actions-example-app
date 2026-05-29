@@ -7,6 +7,7 @@ export default function Header() {
     <header id="main-header">
       <Link href="/">
         <Image
+          loading="eager"
           src={logo}
           width={100}
           height={100}
