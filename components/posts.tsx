@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format";
 import LikeButton from "./like-button";
 import { toggleLikePostStatus } from "@/actions/posts";
 import { useOptimistic } from "react";
+import Image from "next/image";
 
 type Post = {
   id: number;
@@ -27,7 +28,7 @@ function Post({ post, action }: PostProps) {
   return (
     <article className="post">
       <div className="post-image">
-        <img src={null} alt={post.title} />
+        <Image src={post.image} fill alt={post.title} />
       </div>
       <div className="post-content">
         <header>
